@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Modèle Employé
+model Employee {
+  id                  Int       @id @default(autoincrement())
+  firstName           String
+  lastName            String
+  birthDate           String?
+  birthPlace          String?
+  nationality         String    @default("Française")
+  socialSecurityNumber String?
+  email               String    @unique
+  phone               String?
+  mobilePhone         String?
+  address             String?
+  postalCode          String?
+  city                String?
+  country             String    @default("France")
+  employeeNumber      String?
+  hireDate            String
+  position            String
+  department          String?
+  manager             String?
+  workLocation        String?
+  contractType        String    @default("CDI")
+  contractStartDate   String
+  contractEndDate     String?
+  trialPeriod         String?
+  weeklyHours         String    @default("35")
+  grossSalary         String
+  salaryFrequency     String    @default("Mensuel")
+  bankName            String?
+  iban                String?
+  bic                 String?
+  educationLevel      String?
+  diploma             String?
+  maritalStatus       String    @default("Célibataire")
+  numberOfChildren    String    @default("0")
+  emergencyContact    String?
+  emergencyPhone      String?
+  notes               String?
+  status              String    @default("active")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  contracts           Contract[]
+  payslips            Payslip[]
+  associatedTemplates PayslipTemplate[] @relation("EmployeeTemplates")
+
+  @@map("employees")
+}
+
+// Modèle Contrat
+model Contract {
+  id                Int      @id @default(autoincrement())
+  employeeId         Int
+  contractType       String
+  startDate          String
+  endDate            String?
+  trialPeriod        String?
+  weeklyHours        String   @default("35")
+  grossSalary        String
+  salaryFrequency    String   @default("Mensuel")
+  collectiveAgreement String?
+  workLocation       String?
+  position           String?
+  department         String?
+  status             String   @default("active")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  employee           Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("contracts")
+}
+
+// Modèle Bulletin de Paie
+model Payslip {
+  id              Int      @id @default(autoincrement())
+  employeeId       Int
+  month            Int
+  year             Int
+  grossSalary      String
+  netSalary        String
+  socialCharges    String?
+  incomeTax        String?
+  overtimeHours    String?
+  overtimeRate     String?
+  benefits         String?
+  bonuses          String?
+  deductions       String?
+  status           String   @default("generated")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  employee         Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, month, year])
+  @@map("payslips")
+}
+
+// Modèle Maquette de Bulletin
+model PayslipTemplate {
+  id                    Int      @id @default(autoincrement())
+  templateName          String   @unique
+  description           String?
+  targetPopulation      String
+  collectiveAgreement    String?
+  showEmployerInfo      Boolean  @default(true)
+  showEmployeeInfo      Boolean  @default(true)
+  showContractInfo      Boolean  @default(true)
+  showWorkingTime       Boolean  @default(true)
+  baseSalaryEnabled     Boolean  @default(true)
+  overtimeEnabled       Boolean  @default(true)
+  benefitsEnabled       Boolean  @default(true)
+  bonusesEnabled        Boolean  @default(true)
+  healthInsuranceRate   String   @default("7.50")
+  unemploymentRate      String   @default("2.40")
+  retirementRate        String   @default("10.55")
+  csgRate               String   @default("9.20")
+  crdsRate              String   @default("0.50")
+  accidentRate          String   @default("1.00")
+  incomeTaxEnabled      Boolean  @default(true)
+  mealTicketsEnabled    Boolean  @default(false)
+  transportEnabled      Boolean  @default(false)
+  healthInsuranceEnabled Boolean @default(false)
+  retirementPlanEnabled Boolean  @default(false)
+  leaveManagementEnabled Boolean @default(true)
+  customNotesEnabled    Boolean  @default(false)
+  legalMentionsEnabled  Boolean  @default(true)
+  templateStyle         String   @default("standard")
+  status                String   @default("active")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  associatedEmployees   Employee[] @relation("EmployeeTemplates")
+
+  @@map("payslip_templates")
+}
